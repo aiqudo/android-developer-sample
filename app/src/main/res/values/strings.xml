@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Aiqudo Sample</string>
+    <string name="tapToStart">Tap here to begin voice command.</string>
+</resources>
