@@ -1,6 +1,6 @@
 package com.aiqudo.sample.voice
 
-import com.aiqudo.actionkit.internal.ActionKit
+import com.aiqudo.actionkit.ActionKitSDK
 import com.aiqudo.actionkit.voice.VoiceErrorType
 import timber.log.Timber
 
@@ -13,7 +13,7 @@ class VoiceRecognizerWrapper(
     private val stopListening: () -> Unit,
     private val onError: (error: VoiceErrorType) -> Unit
 ) {
-    private val voiceRecognizer = ActionKit.getInstance().voiceRecognizer
+    private val voiceRecognizer = ActionKitSDK.getVoiceRecognizer()
 
     fun listenForResult(onDone: (List<String>) -> Unit) {
         startListening()

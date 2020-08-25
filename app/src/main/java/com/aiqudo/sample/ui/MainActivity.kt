@@ -3,17 +3,19 @@ package com.aiqudo.sample.ui
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.aiqudo.actionkit.ActionKitSDK
 import com.aiqudo.actionkit.assist.IExecutionContext
 import com.aiqudo.actionkit.assist.IExecutionController
 import com.aiqudo.actionkit.assist.IExecutionListener
 import com.aiqudo.actionkit.assist.IResultListener
-import com.aiqudo.actionkit.internal.ActionKit
 import com.aiqudo.actionkit.models.*
 import com.aiqudo.actionkit.tts.ITextToSpeech
 import com.aiqudo.actionkit.tts.TtsStatusListener
@@ -76,7 +78,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         )
-    private val textToSpeech: ITextToSpeech = ActionKit.getInstance().textToSpeech
+    private val textToSpeech: ITextToSpeech = ActionKitSDK.getTextToSpeech()
     private var controller: IExecutionController? = null
 
     /**
@@ -144,7 +146,7 @@ class MainActivity : AppCompatActivity() {
                 // answerStatus.doNothing();
                 // OR retry the prompt
                 viewModel.addSystemItem("We didn't get that.")
-                ActionKit.getUiHandler().postDelayed({ answerStatus.retryPrompt() }, 10)
+                Handler(Looper.getMainLooper()).postDelayed({ answerStatus.retryPrompt() }, 10)
             }
         }
     }
@@ -201,7 +203,7 @@ class MainActivity : AppCompatActivity() {
         voiceRecognizer.listenForResult { utterances ->
             //List of utterances returned here.
             //Use utterances as needed here, update UI, forward utterances to our action search API.
-            val searchRequest = SearchRequest(utterances, applicationContext.packageName)
+            val searchRequest = SearchRequest(utterances, ExecutionSource.SDK)
             viewModel.addUserItem(utterances[0])
             search(searchRequest)
                 .doOnSuccess { selectResult(it) }
@@ -216,9 +218,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun search(request: SearchRequest): Single<SearchResult> {
         return Single.fromCallable {
-            ActionKit.getInstance().actionKitApis.getActionsForCommand(
-                request
-            )
+            ActionKitSDK.getActionKitApi().getActionsForCommand(request)
         }.map { response -> response.result }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -273,8 +273,8 @@ class MainActivity : AppCompatActivity() {
      */
     private fun matchAndExecute(speechResults: List<String>, actions: List<Action>) {
         //Using Aiqudo select action API to match action to utterances
-        val action = ActionKit.getInstance()
-            .actionKitApis.selectAction(speechResults, actions)
+        val action = ActionKitSDK.getActionKitApi()
+            .selectAction(speechResults, actions)
 
         //Execute if found, else handle error.
         if (action != null) {
@@ -291,7 +291,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun executeResult(action: QResult) {
         controller =
-            ActionKit.getInstance().actionKitApis.execute(action, actionExecutionStatusListener)
+            ActionKitSDK.getActionKitApi().execute(action, actionExecutionStatusListener)
     }
 
     /**

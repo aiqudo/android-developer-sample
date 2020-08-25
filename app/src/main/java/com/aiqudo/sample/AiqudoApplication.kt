@@ -31,19 +31,8 @@ class AiqudoApplication : Application() {
 
         override fun getOverlayConfig() = OverlayConfig()
 
-        override fun getActionKitConfig(): ActionKitConfig {
-            return ActionKitConfig().apply {
-                features.apply {
-                    /*
-                     * Add these flags if you want dialog actions to return from search.
-                     * If turned on, you will need to handle prompting in your code.
-                     */
-                    areGeneralContactPromptsEnabled = true
-                    arePromptsEnabled = true
-                    areConfirmationsEnabled = true
-                    enableDialogActions = true
-                }
-            }
+        override fun getActionKitConfig(): ActionKitConfig? {
+            return ActionKitConfig()
         }
     }
 }
