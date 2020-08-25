@@ -372,8 +372,10 @@ class MainActivity : AppCompatActivity() {
                         " in the permissions screen."
             IExecutionContext.STATUS_CANCELLED ->
                 "Action cancelled."
+            IExecutionContext.STATUS_EXECUTIONER_NOT_READY ->
+                "The execution engine is not ready yet. could be issue related to permissions."
             else ->
-                "Execution failed."
+                "Execution failed. reason code - ${exeContext.status}"
         }
     }
 
