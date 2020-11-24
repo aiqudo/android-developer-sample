@@ -5,9 +5,14 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'dagger.hilt.android.plugin'
 
 repositories {
+    mavenLocal()
     maven {
         name "aiqudo"
         url "https://maven.aiqudo.com/"
+    }
+
+    maven {
+        url 'https://csspeechstorage.blob.core.windows.net/maven/'
     }
 }
 
@@ -43,6 +48,15 @@ android {
         kotlinOptions {
             jvmTarget = JavaVersion.VERSION_1_8.toString()
         }
+    }
+
+    packagingOptions {
+        exclude("LICENSE.txt")
+        exclude("META-INF/LICENSE")
+        exclude("META-INF/LICENSE.txt")
+        exclude("META-INF/NOTICE")
+        exclude("META-INF/DEPENDENCIES")
+        exclude("META-INF/INDEX.LIST")
     }
 }
 
@@ -124,7 +138,7 @@ dependencies {
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
     //AIQUDO
-    api('com.aiqudo:actionkit:2.4.5@aar') {
+    api('com.aiqudo:actionkit:2.4.17@aar') {
         // Pull in ActionKit dependencies automatically.
         transitive = true
         // Conflicts with the javax.annotation package pulled in by Dagger/Hilt, you can either exclude ActionKit's version, or Dagger's.

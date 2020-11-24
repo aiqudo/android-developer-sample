@@ -16,6 +16,7 @@ import com.aiqudo.actionkit.assist.IExecutionContext
 import com.aiqudo.actionkit.assist.IExecutionController
 import com.aiqudo.actionkit.assist.IExecutionListener
 import com.aiqudo.actionkit.assist.IResultListener
+import com.aiqudo.actionkit.internal.assist.GsonHelper
 import com.aiqudo.actionkit.models.*
 import com.aiqudo.actionkit.tts.ITextToSpeech
 import com.aiqudo.actionkit.tts.TtsStatusListener
@@ -24,6 +25,7 @@ import com.aiqudo.sample.R
 import com.aiqudo.sample.databinding.ActivityMainBinding
 import com.aiqudo.sample.viewmodels.MainChatViewModel
 import com.aiqudo.sample.voice.VoiceRecognizerWrapper
+import com.google.gson.*
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -71,10 +73,15 @@ class MainActivity : AppCompatActivity() {
                 //An error occurred, check the VoiceErrorType object for what went wrong.
                 //Handle the error as needed, re-listen, etc
                 //Here we just show some error UI and end the session.
-                when (voiceErrorType) {
-                    VoiceErrorType.CANCELLED -> {
-                    }
-                    else -> viewModel.addSystemItem("We couldn't get that, please try again.")
+                val errorMsg = when (voiceErrorType) {
+                    VoiceErrorType.CANCELLED -> null
+                    VoiceErrorType.SPEECH_TIMEOUT -> "You didn't say anything, please try again."
+                    VoiceErrorType.NO_MATCH -> "We couldn't get that, please try again."
+                    VoiceErrorType.INSUFFICIENT_PERMISSIONS -> "Audio Permission Required"
+                    else -> "Something Unexpected Happened $voiceErrorType"
+                }
+                if (errorMsg != null) {
+                    viewModel.addSystemItem(errorMsg)
                 }
             }
         )
@@ -200,11 +207,11 @@ class MainActivity : AppCompatActivity() {
      * Begin voice recognition and then begin disambiguation, if necessary in selectResult().
      */
     private fun searchAndExecute() {
-        voiceRecognizer.listenForResult { utterances ->
+        voiceRecognizer.listenForResult { recognitionResult ->
             //List of utterances returned here.
             //Use utterances as needed here, update UI, forward utterances to our action search API.
-            val searchRequest = SearchRequest(utterances, ExecutionSource.SDK)
-            viewModel.addUserItem(utterances[0])
+            val searchRequest = SearchRequest(recognitionResult, ExecutionSource.SDK)
+            viewModel.addUserItem(recognitionResult.utterances[0])
             search(searchRequest)
                 .doOnSuccess { selectResult(it) }
                 .subscribe()
@@ -257,11 +264,11 @@ class MainActivity : AppCompatActivity() {
         textToSpeech.speak("Which app or action?", Locale.US, object : TtsStatusListener {
             override fun onSpeechEnded() {
                 binding.container.post {
-                    voiceRecognizer.listenForResult { speechResults ->
+                    voiceRecognizer.listenForResult { recognitionResult ->
                         //Updating UI
-                        viewModel.addUserItem(speechResults[0])
+                        viewModel.addUserItem(recognitionResult.utterances[0])
                         //match and execute action
-                        matchAndExecute(speechResults, actions)
+                        matchAndExecute(recognitionResult.utterances, actions)
                     }
                 }
             }
@@ -318,11 +325,11 @@ class MainActivity : AppCompatActivity() {
         textToSpeech.speak(prompt, Locale.US, object : TtsStatusListener {
             override fun onSpeechEnded() {
                 binding.container.post {
-                    voiceRecognizer.listenForResult { speechResults ->
+                    voiceRecognizer.listenForResult { recognitionResult ->
                         //Updating UI
-                        viewModel.addUserItem(speechResults[0])
+                        viewModel.addUserItem(recognitionResult.utterances[0])
                         //Send the results to the prompt controller
-                        promptController.sendAnswer(speechResults, parameterPromptStatusListener)
+                        promptController.sendAnswer(recognitionResult.utterances, parameterPromptStatusListener)
                     }
                 }
             }

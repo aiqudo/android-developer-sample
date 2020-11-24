@@ -47,7 +47,7 @@ class MainChatViewModel : ViewModel() {
     fun displayOptions(options: List<Option>) {
         val displaySb = StringBuilder("We found the following options:\n")
         for (option in options) {
-            displaySb.append("\n${option.title}: ${option.value}")
+            displaySb.append("\n${option.getTitle()}: ${option.value}")
         }
         addSystemItem(displaySb.toString())
     }
